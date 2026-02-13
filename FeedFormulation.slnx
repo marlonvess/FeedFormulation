@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FeedFormulation.Api/FeedFormulation.Api.csproj" />
+  <Project Path="FeedFormulation.Application/FeedFormulation.Application.csproj" />
+  <Project Path="FeedFormulation.Domain/FeedFormulation.Domain.csproj" />
+  <Project Path="FeedFormulation.Infrastructure/FeedFormulation.Infrastructure.csproj" />
+</Solution>

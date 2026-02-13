@@ -1,0 +1,28 @@
+services:
+  # Serviço 1: O Banco de Dados
+  db:
+    image: postgres:15-alpine
+    container_name: feedformulation_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: feed_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Serviço 2: A Interface Visual (pgAdmin)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: feedformulation_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
