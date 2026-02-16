@@ -8,6 +8,7 @@ using FeedFormulation.Infrastructure.Persistence;
 using FeedFormulation.Infrastructure.Http;
 using Microsoft.EntityFrameworkCore;     
 using FeedFormulation.Domain.Entities;           // Para a entidade Ingredient e Nutrient
+using System.Text.Json;
 
 namespace FeedFormulation.Application.Services;
 
@@ -71,7 +72,7 @@ public class FormulaService
 
         // 4. Montar o Pedido Completo
         var request = new SolverProblemRequest(
-            TenantId: "demo-tenant",
+            TenantId: "11111111-1111-1111-1111-111111111111", // Nosso ID de teste
             FormulaVersionId: Guid.NewGuid().ToString(),
             TargetBatchSizeKg: 1000,
             Objective: "min_cost",
@@ -80,7 +81,43 @@ public class FormulaService
             NutrientProfiles: solverNutrients
         );
 
+
+        // Converter o pedido para JSON (para guardar um registo exato do que enviamos)
+        var requestJson = System.Text.Json.JsonSerializer.Serialize(request);
+
+        // Criar o registo no banco de dados (Ainda como Running/Queued)
+        var solverRun = new FeedFormulation.Domain.Entities.Solver.SolverRun(
+            tenantId: Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            formulaVersionId: Guid.Parse(request.FormulaVersionId),
+            requestedByUserId: Guid.Empty, // Utilizador anónimo por enquanto
+            requestJson: requestJson
+        );
+        solverRun.MarkRunning();
+        _context.SolverRuns.Add(solverRun);
+
         // 5. Chamar o Python!
-        return await _solverClient.SolveAsync(request);
+        var response = await _solverClient.SolveAsync(request);
+
+        // Converter a resposta para JSON
+        var responseJson = System.Text.Json.JsonSerializer.Serialize(response);
+
+        // 6. Atualizar o estado do registo consoante a resposta do Python
+        if (response.Status == "succeeded")
+        {
+            solverRun.MarkSucceeded(responseJson);
+        }
+        else if (response.Status == "infeasible")
+        {
+            solverRun.MarkInfeasible(response.DiagnosticMessage ?? "Fórmula impossível de resolver.");
+        }
+        else
+        {
+            solverRun.MarkFailed(response.DiagnosticMessage ?? "Erro no solver.");
+        }
+
+        // 7. Guardar tudo permanentemente no banco de dados!
+        await _context.SaveChangesAsync();
+
+        return response;
     }
 }

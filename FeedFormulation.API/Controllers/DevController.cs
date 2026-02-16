@@ -1,17 +1,17 @@
 ﻿using FeedFormulation.Application.Services;
-using FeedFormulation.Domain.Dtos.Solver; // Certifique-se que o namespace do DTO está certo
+using FeedFormulation.Domain.Dtos.Solver; 
 using Microsoft.AspNetCore.Mvc;
 
 namespace FeedFormulation.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class SolverController : ControllerBase
+public class DevController : ControllerBase
 {
     private readonly FormulaService _formulaService;
 
     // O .NET injeta o FormulaService automaticamente aqui porque configuramos no Program.cs
-    public SolverController(FormulaService formulaService)
+    public DevController(FormulaService formulaService)
     {
         _formulaService = formulaService;
     }

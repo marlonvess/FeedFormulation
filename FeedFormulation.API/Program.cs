@@ -18,6 +18,9 @@ builder.Services.AddHttpClient<FeedFormulation.Infrastructure.Http.SolverHttpCli
 builder.Services.AddScoped<FeedFormulation.Application.Services.FormulaService>();
 // Configure the HTTP request pipeline.
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -50,6 +53,11 @@ using (var scope = app.Services.CreateScope())
 }
 
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 

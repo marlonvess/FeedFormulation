@@ -30,7 +30,9 @@ public sealed class AppDbContext : DbContext
     public DbSet<Formula> Formulas => Set<Formula>();
     public DbSet<FormulaVersion> FormulaVersions => Set<FormulaVersion>();
     public DbSet<FormulaLine> FormulaLines => Set<FormulaLine>();
-    // public DbSet<SolverRun> SolverRuns => Set<SolverRun>(); // Descomente se já criou a classe SolverRun
+    public DbSet<SolverRun> SolverRuns => Set<SolverRun>();
+    public DbSet<SolverRunLineResult> SolverRunLineResults => Set<SolverRunLineResult>();
+    public DbSet<SolverRunNutrientResult> SolverRunNutrientResults => Set<SolverRunNutrientResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
