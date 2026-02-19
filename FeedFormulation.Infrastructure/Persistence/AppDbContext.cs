@@ -11,6 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FeedFormulation.Infrastructure.Persistence;
 
+/// <summary>
+///
+/// </summary>
 public sealed class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }

@@ -7,6 +7,9 @@ using FeedFormulation.Domain.Common;
 
 namespace FeedFormulation.Domain.Entities.Solver;
 
+/// <summary>
+///
+/// </summary>
 public sealed class SolverRunLineResult : TenantEntity
 {
     public Guid SolverRunId { get; private set; }

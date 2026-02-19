@@ -9,6 +9,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace FeedFormulation.Infrastructure.Http;
 
+/// <summary>
+///  
+/// </summary>
 public class SolverHttpClient
 {
     private readonly HttpClient _httpClient;

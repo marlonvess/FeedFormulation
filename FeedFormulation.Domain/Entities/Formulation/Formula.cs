@@ -8,6 +8,12 @@ using FeedFormulation.Domain.Enums;
 
 namespace FeedFormulation.Domain.Entities.Formulation;
 
+/// <summary>
+/// Represents a formula associated with a tenant, encapsulating its properties and versions.
+/// </summary>
+/// <remarks>A formula includes a name, an optional description, and may reference a default constraint set. The
+/// status of a formula can be updated to archived using the Archive method. All versions of the formula are accessible
+/// through the Versions property.</remarks>
 public sealed class Formula : TenantEntity
 {
     public string Name { get; private set; } = null!;

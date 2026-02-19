@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriApp - Formulação de Rações</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">NutriApp</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Catálogo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="formulacao.html">Formulação (Motor IA)</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Catálogo de Ingredientes</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalIngrediente">+ Novo Ingrediente</button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Categoria</th>
+                            <th>Preço (€/kg)</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-ingredientes">
+                        <tr><td colspan="5" class="text-center">A carregar dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalIngrediente" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Ingrediente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formIngrediente">
+                        <div class="mb-3">
+                            <label class="form-label">Código (Ex: MILHO_02)</label>
+                            <input type="text" id="iptCodigo" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nome (Ex: Milho Floculado)</label>
+                            <input type="text" id="iptNome" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Categoria</label>
+                            <select id="iptCategoria" class="form-select">
+                                <option value="Energy">Energético</option>
+                                <option value="Protein">Proteico</option>
+                                <option value="Roughage">Volumoso</option>
+                                <option value="Mineral">Mineral</option>
+                                <option value="Vitamin">Vitamina</option>
+                                <option value="Additive">Aditivo</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Preço (€/kg)</label>
+                            <input type="number" id="iptPreco" step="0.01" class="form-control" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="salvarIngrediente()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const API_BASE_URL = 'https://localhost:7283/api';
+
+        // 1. LER (GET)
+        async function carregarIngredientes() {
+            try {
+                const resposta = await fetch(`${API_BASE_URL}/ingredients`);
+                const ingredientes = await resposta.json();
+                const corpoTabela = document.getElementById('tabela-ingredientes');
+                corpoTabela.innerHTML = '';
+
+                if (ingredientes.length === 0) {
+                    corpoTabela.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum ingrediente.</td></tr>';
+                    return;
+                }
+
+                ingredientes.forEach(ing => {
+                    // Agora os botões chamam as funções e passam o ID do ingrediente!
+                    const linha = `
+                                <tr>
+                                    <td><strong>${ing.code}</strong></td>
+                                    <td>${ing.name}</td>
+                                    <td><span class="badge bg-secondary">${ing.category}</span></td>
+                                    <td>€ ${ing.priceCurrent.toFixed(2)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editarPreco('${ing.id}', ${ing.priceCurrent})">Editar Preço</button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="apagarIngrediente('${ing.id}', '${ing.name}')">Apagar</button>
+                                    </td>
+                                </tr>
+                            `;
+                    corpoTabela.innerHTML += linha;
+                });
+            } catch (erro) {
+                console.error("Erro:", erro);
+            }
+        }
+
+        // 2. CRIAR (POST)
+        async function salvarIngrediente() {
+            const dto = {
+                code: document.getElementById('iptCodigo').value,
+                name: document.getElementById('iptNome').value,
+                category: document.getElementById('iptCategoria').value,
+                priceCurrent: parseFloat(document.getElementById('iptPreco').value)
+            };
+
+            // Fazemos o pedido e guardamos a 'resposta'
+            const resposta = await fetch(`${API_BASE_URL}/ingredients`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dto)
+            });
+
+            // VERIFICAÇÃO DE ERRO: Se a resposta não for Ok (200), mostra o erro!
+            if (!resposta.ok) {
+                const erroTexto = await resposta.text();
+                alert("Erro ao salvar o ingrediente no .NET:\n" + erroTexto);
+                return; // Para a execução aqui
+            }
+
+            // Se correu tudo bem, fecha a janela e recarrega
+            bootstrap.Modal.getInstance(document.getElementById('modalIngrediente')).hide();
+            document.getElementById('formIngrediente').reset();
+            carregarIngredientes();
+        }
+
+        // 3. APAGAR (DELETE)
+        async function apagarIngrediente(id, nome) {
+            if (confirm(`Tem a certeza que deseja apagar o ingrediente: ${nome}?`)) {
+                await fetch(`${API_BASE_URL}/ingredients/${id}`, { method: 'DELETE' });
+                carregarIngredientes(); // Recarrega a tabela
+            }
+        }
+
+        // 4. ATUALIZAR PREÇO (PUT)
+        async function editarPreco(id, precoAtual) {
+            const novoPreco = prompt("Digite o novo preço (€/kg):", precoAtual);
+
+            if (novoPreco !== null && novoPreco !== "") {
+                const dto = { priceCurrent: parseFloat(novoPreco.replace(',', '.')) };
+
+                await fetch(`${API_BASE_URL}/ingredients/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dto)
+                });
+                carregarIngredientes(); // Recarrega a tabela
+            }
+        }
+
+        // Inicia a aplicação
+        carregarIngredientes();
+    </script>
+</body>
+</html>

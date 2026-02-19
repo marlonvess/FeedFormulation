@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace FeedFormulation.Domain.ValueObjects;
 
+/// <summary>
+/// 
+/// </summary>
 public readonly record struct Percentage
 {
     

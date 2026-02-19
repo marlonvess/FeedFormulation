@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace FeedFormulation.Domain.Enums;
 
+/// <summary>
+/// 
+/// </summary>
 public enum OptimizationObjective
 {
     MinCost // Custo Mínimo (Foco da Fase 1)

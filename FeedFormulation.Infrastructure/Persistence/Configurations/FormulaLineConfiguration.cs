@@ -10,6 +10,7 @@ public sealed class FormulaLineConfiguration : IEntityTypeConfiguration<FormulaL
 {
     public void Configure(EntityTypeBuilder<FormulaLine> b)
     {
+        
         b.ToTable("formula_lines");
         b.HasKey(x => x.Id);
 
@@ -20,7 +21,7 @@ public sealed class FormulaLineConfiguration : IEntityTypeConfiguration<FormulaL
             v => v.Value,
             v => new Percentage(v));
 
-        // 2. Aplicamos esse conversor nas propriedades
+        // 2. Aplicamos esse conversor nas propriedades 
         // O EF Core é inteligente o suficiente para aplicar isso automaticamente
         // mesmo que a propriedade seja "Percentage?" (nula).
 

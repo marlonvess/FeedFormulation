@@ -10,6 +10,9 @@ namespace FeedFormulation.Domain.Entities.Solver;
 
 public sealed class SolverRunNutrientResult : TenantEntity
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public Guid SolverRunId { get; private set; }
     public Guid NutrientId { get; private set; }
 
@@ -20,6 +23,16 @@ public sealed class SolverRunNutrientResult : TenantEntity
 
     private SolverRunNutrientResult() { }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="tenantId"></param>
+    /// <param name="solverRunId"></param>
+    /// <param name="nutrientId"></param>
+    /// <param name="achieved"></param>
+    /// <param name="minReq"></param>
+    /// <param name="maxAll"></param>
+    /// <param name="isBinding"></param>
     public SolverRunNutrientResult(Guid tenantId, Guid solverRunId, Guid nutrientId, decimal achieved, decimal? minReq, decimal? maxAll, bool isBinding)
     {
         TenantId = tenantId;

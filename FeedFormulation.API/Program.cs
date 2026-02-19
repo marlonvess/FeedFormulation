@@ -2,7 +2,6 @@ using FeedFormulation.Infrastructure.Persistence;
 using FeedFormulation.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -10,7 +9,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // Configuração do Solver Python
 builder.Services.AddHttpClient<FeedFormulation.Infrastructure.Http.SolverHttpClient>();
@@ -21,23 +24,40 @@ builder.Services.AddScoped<FeedFormulation.Application.Services.FormulaService>(
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+///  when it starts, we create a scope to access the services and ensure the database is created and seeded
 var app = builder.Build();
 
+
+
+///  creating a scope to access the registered services, such as AppDbContext, and perform migration and seeding operations
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
-    {
+    { 
         var context = services.GetRequiredService<AppDbContext>();
 
-        // 1. Aplica Migrations automaticamente (cria o banco se não existir)
+        // 1. Apply migrations automatically (creates the database if it doesn't exist)
+        /// Note: In production, consider using explicit migrations instead of automatic ones for better control over database changes.
         await context.Database.MigrateAsync();
 
-        // 2. Definimos um ID fixo para a nossa "Fazenda de Teste"
-        // (Mais tarde, isto virá do login do utilizador)
+        // 2. Define a fixed ID for our "Test Farm" tenant
+        //  Later , this will come from the user login/session in a real application. For now, we use a hardcoded tenant ID to associate all seeded data with a specific tenant.
+        /// Note: In a real application, tenant management would be more complex and secure, likely involving authentication and dynamic tenant resolution.
         var tenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-        // 3. Executa os Seeds na ordem correta
+        // 3. running the seeders in the correct order to ensure that all necessary data is present before dependent data is seeded. For example, nutrients must be seeded before ingredients, and both must be seeded before constraint sets that reference them.
+        /// Note: Ensure that seeds are idempotent and can be safely run multiple times without causing data duplication or integrity issues.
         Console.WriteLine("A iniciar o Seed do banco de dados...");
 
         await BovineBaselineSeed.SeedAsync(context, tenantId);
@@ -52,14 +72,22 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
+/// set up the middleware pipeline for the application, including Swagger for API documentation,
+/// CORS policy, HTTPS redirection, and routing for controllers. The configuration is designed to allow for easy development and testing while also providing a foundation for secure and efficient API operations in production.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+
+
 app.UseHttpsRedirection();
+
+
+//// Apply CORS policy to allow cross-origin requests, which is essential for enabling frontend applications hosted on different domains to interact with this API. The "AllowAll" policy defined earlier permits any origin, 
+///method, and header, making it suitable for development and testing. In production, consider implementing a more restrictive CORS policy to enhance security by allowing only trusted origins.
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 

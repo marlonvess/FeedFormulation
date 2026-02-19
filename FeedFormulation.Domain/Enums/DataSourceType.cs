@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace FeedFormulation.Domain.Enums;
 
+/// <summary>
+///
+/// </summary>
 public enum DataSourceType
 {
     Table,      // Tabela (ex: INRA, NRC)
