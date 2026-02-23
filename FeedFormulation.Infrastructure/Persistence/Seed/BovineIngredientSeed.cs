@@ -54,6 +54,17 @@ public static class BovineIngredientSeed
                 Code="MINERAL", Name="Corrector Mineral Bovinos", Category=IngredientCategory.Mineral,
                 Group="Mineral/Vitaminas", Price=0.80m,
                 Nutrients=new Dictionary<string,decimal>{ {"PB",0m}, {"NDF",0m}, {"CA",15m}, {"P",8m}, {"NA",5m}, {"EE",0m}, {"AMIDO",0m} }
+            },
+            new {
+                Code="COLZA", Name="Farelo de Colza", Category=IngredientCategory.Protein,
+                Group="Proteicos", Price=0.38m,
+                Nutrients=new Dictionary<string,decimal>{ { "PB", 0m }, { "NDF", 0m }, { "CA", 15m }, { "P", 8m }, { "NA", 5m }, { "EE", 0m }, { "AMIDO", 0m } }
+            },
+            new {
+                Code="OLEO", Name="Óleo Vegetal", Category=IngredientCategory.Fat,
+                Group="Gorduras adicionadas", Price=0.95m,
+                Nutrients=new Dictionary<string,decimal>{{"PB",0m},{"NDF",0m},{"CA",0m},{"P",0m},{"NA",0m},{"EE",99m},{"AMIDO",0m}
+                }
             }
         };
 

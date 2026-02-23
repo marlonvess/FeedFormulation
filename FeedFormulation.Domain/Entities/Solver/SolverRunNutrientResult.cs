@@ -11,7 +11,8 @@ namespace FeedFormulation.Domain.Entities.Solver;
 public sealed class SolverRunNutrientResult : TenantEntity
 {
     /// <summary>
-    /// 
+    /// Solverrun identificator to which this nutrient result belongs. A single solver run will have multiple nutrient results, one for each nutrient constraint defined in the formula version.
+    /// This allows us to track how well the solution achieved by the solver meets the nutritional requirements specified in the formula version, and to identify any constraints that may be binding or not met.
     /// </summary>
     public Guid SolverRunId { get; private set; }
     public Guid NutrientId { get; private set; }
@@ -23,8 +24,9 @@ public sealed class SolverRunNutrientResult : TenantEntity
 
     private SolverRunNutrientResult() { }
 
+    
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="tenantId"></param>
     /// <param name="solverRunId"></param>

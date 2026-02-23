@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 namespace FeedFormulation.Domain.Enums;
 
 /// <summary>
-///
+/// Defines the various types of data sources that can be used in feed formulation. 
+/// This enumeration helps identify where the data for ingredients, nutritional values, and other relevant information is coming from, whether it's from established tables, laboratory analyses, suppliers, or manual entries.
 /// </summary>
 public enum DataSourceType
 {

@@ -29,17 +29,24 @@ public class IngredientsController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var ingredients = await _context.Ingredients
-            .Where(i => i.TenantId == _tenantId)
-            .OrderBy(i => i.Name)
-            .Select(i => new
+        .Where(i => i.TenantId == _tenantId)
+        .OrderBy(i => i.Name)
+        .Select(i => new
+        {
+            i.Id,
+            i.Code,
+            i.Name,
+            i.PriceCurrent,
+            Category = i.Category.ToString(),
+
+            Nutrients = i.NutritionalInfo.Select(ni => new
             {
-                i.Id,
-                i.Code,
-                i.Name,
-                i.PriceCurrent,
-                Category = i.Category.ToString()
+                ni.NutrientId,
+                ni.Source,
+                ni.Value
             })
-            .ToListAsync();
+        })
+        .ToListAsync();
 
         return Ok(ingredients);
     }

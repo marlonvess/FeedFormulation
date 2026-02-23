@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace FeedFormulation.Domain.Enums;
 
 /// <summary>
-/// 
+/// define objective of optimization
 /// </summary>
 public enum OptimizationObjective
 {

@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace FeedFormulation.Domain.Enums;
-
+/// <summary>
+///
+/// </summary>
 public enum SolverRunStatus
 {
     Queued,     // Na fila

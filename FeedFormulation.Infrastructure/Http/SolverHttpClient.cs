@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 namespace FeedFormulation.Infrastructure.Http;
 
 /// <summary>
-///  
+/// A client for communicating with the external Solver service, responsible for sending formulation problems and receiving solutions.
 /// </summary>
 public class SolverHttpClient
 {

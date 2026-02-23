@@ -13,7 +13,7 @@ public static class BovineConstraintSetsSeed
 {
     public static async Task SeedAsync(AppDbContext db, Guid tenantId)
     {
-        // 1. Buscar IDs necessários
+        // 1. search for necessary IDs (nutrients and groups) to link in the rules
         var nutrients = await db.Nutrients
             .Where(n => n.TenantId == tenantId)
             .ToDictionaryAsync(n => n.Code, n => n.Id);
@@ -25,22 +25,22 @@ public static class BovineConstraintSetsSeed
         Guid N(string code) => nutrients.ContainsKey(code) ? nutrients[code] : Guid.Empty;
         Guid G(string name) => groups.ContainsKey(name) ? groups[name] : Guid.Empty;
 
-        // 2. Definir o Template de Engorda
+        // 2. Define a template to fattering phase (TMR - Total Mixed Ration) based on MS (Dry Matter)
         var engordaName = "Bovinos Engorda - Acabamento (TMR) - Base MS";
         var engorda = await db.ConstraintSets
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Name == engordaName);
 
         if (engorda is null)
         {
-            // Cria o Cabeçalho do Conjunto de Regras
+            // create a header for the constraint set
             engorda = new ConstraintSet(tenantId, engordaName, species: "Bovinos", phase: "Engorda/Acabamento");
             db.ConstraintSets.Add(engorda);
             await db.SaveChangesAsync();
 
-            // Cria as Regras Individuais
+            // create indivusual rules
             var rules = new List<ConstraintRule>
             {
-                // Regras Nutricionais (Baseado em Matéria Seca)
+                //  Nutritional rules (based on dry matter)
                 RuleNutrientMin(tenantId, engorda.Id, N("PB"), 11.0m),
                 RuleNutrientMax(tenantId, engorda.Id, N("PB"), 15.0m),
 
@@ -56,20 +56,20 @@ public static class BovineConstraintSetsSeed
                 RuleNutrientMin(tenantId, engorda.Id, N("P"), 0.25m),
                 RuleNutrientMin(tenantId, engorda.Id, N("NA"), 0.10m),
 
-                // Regras de Grupos (Limites Tecnológicos/Saúde)
+                // Group rules (Techological limits/Rumen health)
                 RuleGroupMin(tenantId, engorda.Id, G("Volumosos"), 30.0m), // Mínimo 30% de volumoso para saúde do rúmen
                 RuleGroupMax(tenantId, engorda.Id, G("Cereais/Amiláceos"), 55.0m),
                 RuleGroupMin(tenantId, engorda.Id, G("Mineral/Vitaminas"), 1.0m),
                 RuleGroupMax(tenantId, engorda.Id, G("Gorduras adicionadas"), 2.0m)
             };
 
-            // Filtra regras inválidas (caso algum ID não tenha sido encontrado) e salva
+            // Filter invalid rules (in case any ID was not found) and save
             db.ConstraintRules.AddRange(rules.Where(r => r.NutrientId != Guid.Empty || r.IngredientGroupId != Guid.Empty));
             await db.SaveChangesAsync();
         }
     }
 
-    // Métodos Auxiliares para criar as regras mais facilmente
+    // Auxiliary methods to create rules more easily
     private static ConstraintRule RuleNutrientMin(Guid tenantId, Guid setId, Guid nutrientId, decimal min)
         => new(tenantId, setId, ConstraintRuleType.NutrientMin, minValue: min, maxValue: null, nutrientId: nutrientId);
 

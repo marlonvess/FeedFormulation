@@ -61,8 +61,8 @@ public class NutrientsController : ControllerBase
 
         if (nutrient == null) return NotFound("Nutriente não encontrado.");
 
-        // Nota: Se o 'Name' ou 'Unit' estiverem como 'private set' na sua entidade Nutrient.cs,
-        // pode ser necessário criar um método dentro da entidade como: nutrient.Update(dto.Name, dto.Unit);
+        // Note: If 'Name' Or 'Unit' are "private set" in your Nutrient.cs entity,
+        // you may need to create a method inside the entity like: nutrient.Update(dto.Name, dto.Unit);
 
         // Assumindo que podemos alterar diretamente:
         // nutrient.Name = dto.Name; 

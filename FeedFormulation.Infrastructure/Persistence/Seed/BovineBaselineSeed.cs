@@ -14,16 +14,16 @@ public static class BovineBaselineSeed
 {
     public static async Task SeedAsync(AppDbContext db, Guid tenantId)
     {
-        // 1. Garantir Nutrientes Básicos
+        // 1. Ensure Basic Nutrients
         await EnsureNutrientsAsync(db, tenantId);
 
-        // 2. Garantir Grupos de Ingredientes
+        // 2. Ensure Ingredient Groups
         await EnsureIngredientGroupsAsync(db, tenantId);
     }
 
     private static async Task EnsureNutrientsAsync(AppDbContext db, Guid tenantId)
     {
-        // Lista do que precisamos ter no banco
+        // List of what we need to have in the database
         var required = new (string Code, string Name, NutrientUnit Unit)[]
         {
             ("PB",    "Proteína Bruta", NutrientUnit.Percent),
@@ -36,7 +36,7 @@ public static class BovineBaselineSeed
             ("MS",    "Matéria Seca", NutrientUnit.Percent)
         };
 
-        // Verifica o que JÁ existe para não duplicar
+        // Verify which of the required nutrients are already in the database
         var existingCodes = await db.Nutrients
             .Where(x => x.TenantId == tenantId)
             .Select(x => x.Code)
@@ -52,6 +52,12 @@ public static class BovineBaselineSeed
         await db.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Ensure the existence of the required ingredient groups for bovine feed formulation.
+    /// </summary>
+    /// <param name="db">The database context to use for querying and saving ingredient groups.</param>
+    /// <param name="tenantId">The tenant ID to associate with the ingredient groups.</param>
+    /// <returns>A task that represents the asynchronous operation of ensuring ingredient groups.</returns>
     private static async Task EnsureIngredientGroupsAsync(AppDbContext db, Guid tenantId)
     {
         var requiredGroups = new[]

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace FeedFormulation.Domain.ValueObjects;
 
 /// <summary>
-/// 
+/// Represents a percentage value constrained between 0 and 100. This value object ensures that any percentage used within the domain is valid and provides implicit conversions to and from decimal for ease of use in calculations and comparisons.
 /// </summary>
 public readonly record struct Percentage
 {

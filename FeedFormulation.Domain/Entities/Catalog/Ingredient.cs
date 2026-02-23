@@ -26,7 +26,7 @@ public sealed class Ingredient : TenantEntity
     public decimal? DryMatterPercent { get; private set; } // Matéria Seca (0..100)
     public bool IsActive { get; private set; } = true;
 
-    // Construtor vazio para o EF Core
+    // Empty constructor for EF Core
     /// <summary>
     /// Initializes a new instance of the Ingredient class for use by Entity Framework Core.
     /// </summary>

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace FeedFormulation.Domain.Enums;
 
 /// <summary>
-/// 
+/// Defines the various types of constraint rules that can be applied in feed formulation.
 /// </summary>
 public enum ConstraintRuleType
 {
