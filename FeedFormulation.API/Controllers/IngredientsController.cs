@@ -37,14 +37,7 @@ public class IngredientsController : ControllerBase
             i.Code,
             i.Name,
             i.PriceCurrent,
-            Category = i.Category.ToString(),
-
-            Nutrients = i.NutritionalInfo.Select(ni => new
-            {
-                ni.NutrientId,
-                ni.Source,
-                ni.Value
-            })
+            Category = i.Category.ToString()       
         })
         .ToListAsync();
 
