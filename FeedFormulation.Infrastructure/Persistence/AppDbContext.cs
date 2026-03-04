@@ -8,21 +8,25 @@ using FeedFormulation.Domain.Entities.Formulation;
 using FeedFormulation.Domain.Entities.Solver;
 using FeedFormulation.Domain.Common;
 using Microsoft.EntityFrameworkCore;
+using FeedFormulation.Domain.Entities.Livestock;
 
 namespace FeedFormulation.Infrastructure.Persistence;
 
 /// <summary>
-///
+/// Context to manage the database connection and map the domain entities to database tables using Entity Framework Core.
 /// </summary>
 public sealed class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    // --- TABELAS ---
+    // --- Tables ---
+
+    // Catalog management
     public DbSet<Ingredient> Ingredients => Set<Ingredient>();
     public DbSet<Nutrient> Nutrients => Set<Nutrient>();
     public DbSet<IngredientNutrientProfile> IngredientNutrientProfiles => Set<IngredientNutrientProfile>();
 
+    
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<IngredientPrice> IngredientPrices => Set<IngredientPrice>();
     public DbSet<IngredientGroup> IngredientGroups => Set<IngredientGroup>();
@@ -30,12 +34,16 @@ public sealed class AppDbContext : DbContext
     public DbSet<ConstraintSet> ConstraintSets => Set<ConstraintSet>();
     public DbSet<ConstraintRule> ConstraintRules => Set<ConstraintRule>();
 
+    // Formulation management
     public DbSet<Formula> Formulas => Set<Formula>();
     public DbSet<FormulaVersion> FormulaVersions => Set<FormulaVersion>();
     public DbSet<FormulaLine> FormulaLines => Set<FormulaLine>();
     public DbSet<SolverRun> SolverRuns => Set<SolverRun>();
     public DbSet<SolverRunLineResult> SolverRunLineResults => Set<SolverRunLineResult>();
     public DbSet<SolverRunNutrientResult> SolverRunNutrientResults => Set<SolverRunNutrientResult>();
+
+    /// Animal management
+    public DbSet<Animal> Animals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
