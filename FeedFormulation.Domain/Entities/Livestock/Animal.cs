@@ -33,6 +33,9 @@ namespace FeedFormulation.Domain.Entities.Livestock
         public string? SireSia { get; private set; } // Pai
         public string? DamSia { get; private set; }  // Mãe
 
+        // Relação: Uma vaca tem vários registos de produção de leite
+        public virtual ICollection<MilkProductionRecord> MilkProductions { get; private set; } = new List<MilkProductionRecord>();
+
         // Construtor vazio (obrigatório para o Entity Framework)
         protected Animal() { }
 

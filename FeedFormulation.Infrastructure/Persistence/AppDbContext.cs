@@ -45,6 +45,8 @@ public sealed class AppDbContext : DbContext
     /// Animal management
     public DbSet<Animal> Animals { get; set; }
 
+    public DbSet<MilkProductionRecord> MilkProductionRecords { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
