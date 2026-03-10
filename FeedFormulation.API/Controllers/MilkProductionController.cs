@@ -141,6 +141,78 @@ public class MilkProductionController : ControllerBase
 
         return Ok(new { message = "Milk production record successfully deleted!" });
     }
+
+    // --- BUSINESS INTELLIGENCE (BI) ENDPOINTS ---
+
+    // 6. GET: Média Diária por Lote (Para o Gráfico de Lotes)
+    [HttpGet("lot-summary")]
+    public async Task<IActionResult> GetLotSummary()
+    {
+        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+
+        // PASSO 1: Fazer a matemática pesada no PostgreSQL
+        // Repare no .Include(m => m.Animal) -> Isto faz o JOIN para sabermos o lote da vaca!
+        var dbResult = await _context.MilkProductionRecords
+            .Include(m => m.Animal)
+            .Where(m => m.TenantId == _tenantId && m.Date >= thirtyDaysAgo && !m.IsDeleted)
+            .GroupBy(m => new {
+                m.Date.Date,
+                Lot = m.Animal.Lot ?? "Unassigned" // Se não tiver lote, chamamos de "Unassigned" (Sem Lote)
+            })
+            .Select(g => new
+            {
+                RawDate = g.Key.Date,
+                LotName = g.Key.Lot,
+                AverageVolume = g.Average(m => m.VolumeInLiters),
+                NumberOfCows = g.Count()
+            })
+            .OrderBy(r => r.RawDate)
+            .ThenBy(r => r.LotName)
+            .ToListAsync();
+
+        // PASSO 2: Formatar a data no C# e arredondar as casas decimais para o React
+        var result = dbResult.Select(r => new
+        {
+            date = r.RawDate.ToString("yyyy-MM-dd"),
+            lot = r.LotName,
+            averageVolume = Math.Round(r.AverageVolume, 2),
+            numberOfCows = r.NumberOfCows
+        });
+
+        return Ok(result);
+    }
+
+    // 7. GET: Evolução Mensal da Vaca (Para o Perfil Individual do Animal)
+    [HttpGet("animal/{animalId}/monthly-evolution")]
+    public async Task<IActionResult> GetAnimalMonthlyEvolution(Guid animalId)
+    {
+        // PASSO 1: O PostgreSQL agrupa por Ano e Mês
+        var dbResult = await _context.MilkProductionRecords
+            .Where(m => m.TenantId == _tenantId && m.AnimalId == animalId && !m.IsDeleted)
+            .GroupBy(m => new { m.Date.Year, m.Date.Month })
+            .Select(g => new
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                TotalVolume = g.Sum(m => m.VolumeInLiters),
+                AverageDailyVolume = g.Average(m => m.VolumeInLiters),
+                DaysMilked = g.Count()
+            })
+            .OrderBy(r => r.Year)
+            .ThenBy(r => r.Month)
+            .ToListAsync();
+
+        // PASSO 2: O C# formata o texto para "2026-03" (Ano-Mês)
+        var result = dbResult.Select(r => new
+        {
+            month = $"{r.Year}-{r.Month:D2}", // :D2 garante que o mês 3 fica "03"
+            totalVolume = Math.Round(r.TotalVolume, 2),
+            averageDailyVolume = Math.Round(r.AverageDailyVolume, 2),
+            daysMilked = r.DaysMilked
+        });
+
+        return Ok(result);
+    }
 }
 
 
