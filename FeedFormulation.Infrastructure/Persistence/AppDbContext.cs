@@ -47,6 +47,9 @@ public sealed class AppDbContext : DbContext
 
     public DbSet<MilkProductionRecord> MilkProductionRecords { get; set; }
 
+    public DbSet<ReproductionRecord> ReproductionRecords { get; set; } 
+    public DbSet<HealthRecord> HealthRecords { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
