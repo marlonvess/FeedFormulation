@@ -106,44 +106,57 @@ public class HealthAndReproController : ControllerBase
     // --- BUSINESS INTELLIGENCE & ALERTAS ---
     // ==========================================
 
-    // 5. GET: Alertas de Gestão Avançados (O cérebro do sistema)
+    // 5. GET: Alertas de Gestão Avançados (Versão à prova de falhas)
     [HttpGet("dashboard-alerts")]
     public async Task<IActionResult> GetDashboardAlerts()
     {
         var today = DateTime.UtcNow.Date;
         var thirtyDaysAgo = today.AddDays(-30);
 
-        // --- Alerta 1: Despesas Médicas Recentes ---
+        // 1. Calcula Despesas Médicas
         var recentHealthCosts = await _context.HealthRecords
             .Where(h => h.TenantId == _tenantId && h.Date >= thirtyDaysAgo && !h.IsDeleted)
             .SumAsync(h => h.Cost ?? 0);
 
-        // Para os alertas reprodutivos, precisamos de analisar o ÚLTIMO evento de cada vaca
-        // Trazemos as vacas e os seus eventos para a memória (são poucos dados, é muito rápido)
-        var animalsWithRepro = await _context.Animals
-            .Include(a => a.ReproductionRecords.Where(r => !r.IsDeleted))
-            .Where(a => a.TenantId == _tenantId && a.Status == AnimalStatus.Active)
+        // 2. Carrega as Vacas e os Registos de forma explícita (Resolve o bug do EF Core)
+        var femaleCows = await _context.Animals
+            .Where(a => a.TenantId == _tenantId && a.Status == AnimalStatus.Active && a.Gender == AnimalGender.Female)
             .ToListAsync();
 
-        var cowsToDryOff = new List<object>();
-        var cowsOverdueForInsemination = new List<object>();
+        var reproRecords = await _context.ReproductionRecords
+            .Where(r => r.TenantId == _tenantId && !r.IsDeleted)
+            .ToListAsync();
 
-        foreach (var animal in animalsWithRepro)
+        var negativePregnancyChecks = new List<object>();
+        var cowsToDryOff = new List<object>();
+        var overdueForInsemination = new List<object>();
+
+        foreach (var animal in femaleCows)
         {
-            var lastReproEvent = animal.ReproductionRecords.OrderByDescending(r => r.Date).FirstOrDefault();
+            // Filtra o último evento só para esta vaca específica
+            var lastReproEvent = reproRecords
+                .Where(r => r.AnimalId == animal.Id)
+                .OrderByDescending(r => r.Date)
+                .FirstOrDefault();
 
             if (lastReproEvent != null)
             {
-                // --- Alerta 2: Vacas para Secar ---
-                // Regra: Vacas que estão prenhas e a inseminação ocorreu entre 210 e 240 dias atrás.
-                // (Nota: Num sistema complexo procuraríamos a Inseminação cruzada com o Diagnóstico de Gestação, 
-                // mas para este teste olhamos se ela está confirmada prenhe ou se o último evento foi a inseminação há muito tempo).
                 var daysSinceLastEvent = (today - lastReproEvent.Date).TotalDays;
 
-                // Se o último evento foi um diagnóstico de gestação positivo E já passou muito tempo da possível inseminação
-                // OU se foi Inseminação há ~220 dias (60 dias antes do parto de 283 dias)
+                // Alerta A: Diagnóstico Negativo (Vazia)
+                if (lastReproEvent.EventType == ReproductionEventType.PregnancyCheck && lastReproEvent.IsPregnant == false)
+                {
+                    negativePregnancyChecks.Add(new
+                    {
+                        animalName = animal.Name,
+                        sia = animal.SiaNumber,
+                        reason = "Diagnóstico de gestação negativo. Requer atenção."
+                    });
+                }
+
+                // Alerta B: Vacas para Secar (~220 dias após Inseminação)
                 if ((lastReproEvent.EventType == ReproductionEventType.Insemination && daysSinceLastEvent >= 210 && daysSinceLastEvent <= 240) ||
-                    (lastReproEvent.EventType == ReproductionEventType.PregnancyCheck && lastReproEvent.IsPregnant == true && daysSinceLastEvent >= 180)) // Se confirmada há mais de 180 dias
+                    (lastReproEvent.EventType == ReproductionEventType.PregnancyCheck && lastReproEvent.IsPregnant == true && daysSinceLastEvent >= 180))
                 {
                     cowsToDryOff.Add(new
                     {
@@ -153,11 +166,10 @@ public class HealthAndReproController : ControllerBase
                     });
                 }
 
-                // --- Alerta 3: Vacas Atrasadas para Inseminação ---
-                // Regra: Pariu há mais de 60 dias (Período de Espera Voluntário) e ainda não tem novo evento de inseminação
+                // Alerta C: Atrasadas para Inseminação (> 60 dias após parto)
                 if (lastReproEvent.EventType == ReproductionEventType.Calving && daysSinceLastEvent > 60)
                 {
-                    cowsOverdueForInsemination.Add(new
+                    overdueForInsemination.Add(new
                     {
                         animalName = animal.Name,
                         sia = animal.SiaNumber,
@@ -173,8 +185,9 @@ public class HealthAndReproController : ControllerBase
             TotalHealthCostsLast30Days = Math.Round(recentHealthCosts, 2),
             Alerts = new
             {
+                NegativePregnancyChecks = negativePregnancyChecks,
                 CowsToDryOff = cowsToDryOff,
-                OverdueForInsemination = cowsOverdueForInsemination
+                OverdueForInsemination = overdueForInsemination
             }
         });
     }
