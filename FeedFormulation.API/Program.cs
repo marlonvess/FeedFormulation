@@ -24,18 +24,23 @@ builder.Services.AddScoped<FeedFormulation.Application.Services.FormulaService>(
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// 1. Permitir que o React fale com a API
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000", "http://localhost:5173") // Portas normais do React/Vite
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
 });
 
 ///  when it starts, we create a scope to access the services and ensure the database is created and seeded
 var app = builder.Build();
+
+app.UseCors("AllowReactApp"); // 2. Ativa a fronteira aberta para o React
+
 
 
 

@@ -1,14 +1,15 @@
-﻿using System;
+﻿using FeedFormulation.Domain.Common;
+using FeedFormulation.Domain.Entities.Catalog;
+using FeedFormulation.Domain.Entities.Finance;
+using FeedFormulation.Domain.Entities.Formulation;
+using FeedFormulation.Domain.Entities.Livestock;
+using FeedFormulation.Domain.Entities.Solver;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FeedFormulation.Domain.Entities.Catalog;
-using FeedFormulation.Domain.Entities.Formulation;
-using FeedFormulation.Domain.Entities.Solver;
-using FeedFormulation.Domain.Common;
-using Microsoft.EntityFrameworkCore;
-using FeedFormulation.Domain.Entities.Livestock;
 
 namespace FeedFormulation.Infrastructure.Persistence;
 
@@ -50,6 +51,8 @@ public sealed class AppDbContext : DbContext
     public DbSet<ReproductionRecord> ReproductionRecords { get; set; } 
     public DbSet<HealthRecord> HealthRecords { get; set; }
 
+    /// Finance management
+    public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
