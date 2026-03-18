@@ -6,9 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FeedFormulation.Api.Controllers;
 
-/// <summary>
-/// 
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class IngredientsController : ControllerBase
@@ -24,7 +21,7 @@ public class IngredientsController : ControllerBase
         _context = context;
     }
 
-    // 1. LER (GET): Retorna a lista de todos os ingredientes
+    // 1.GET: REturn a list of all ingredients for the tenant, ordered by name, including their current price and category
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -44,7 +41,7 @@ public class IngredientsController : ControllerBase
         return Ok(ingredients);
     }
 
-    // 2. CRIAR (POST): Adiciona um novo ingrediente
+    // 2.POST: Add a new ingredient to the database, ensuring that the code is unique within the tenant. The request body should include the code, name, current price, and category of the ingredient.
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateIngredientDto dto)
     {
@@ -59,7 +56,7 @@ public class IngredientsController : ControllerBase
         return Ok(new { message = "Ingrediente criado com sucesso!", id = ingredient.Id });
     }
 
-    // 3. ATUALIZAR (PUT): Altera o preço de um ingrediente existente
+    // 3.PUT: Change the current price of an existing ingredient, ensuring that the ingredient belongs to the tenant. The request body should include the new price.
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePrice(Guid id, [FromBody] UpdateIngredientDto dto)
     {
@@ -74,7 +71,7 @@ public class IngredientsController : ControllerBase
         return Ok(new { message = "Preço atualizado com sucesso!" });
     }
 
-    // 4. APAGAR (DELETE): Remove o ingrediente do banco
+    // 4. DELETE: Remove an ingredient from the database, ensuring that it belongs to the tenant. The ingredient should only be deleted if it is not currently used in any feed formulation. If it is used, return an appropriate error message.
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -90,7 +87,7 @@ public class IngredientsController : ControllerBase
     }
 }
 
-// --- DTOs (Formatos de Entrada) ---
-// Colocamos aqui no final do arquivo para facilitar por enquanto
+// --- DTOs ---
+
 public record CreateIngredientDto(string Code, string Name, decimal PriceCurrent, IngredientCategory Category);
 public record UpdateIngredientDto(decimal PriceCurrent);

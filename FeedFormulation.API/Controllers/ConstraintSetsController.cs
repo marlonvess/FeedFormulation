@@ -17,7 +17,7 @@ public class ConstraintSetsController : ControllerBase
         _context = context;
     }
 
-    // 1. LER (GET)
+    // 1. GET: Return a list of all constraint sets for the tenant, including their associated rules
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -44,7 +44,7 @@ public class ConstraintSetsController : ControllerBase
         return Ok(constraintSets);
     }
 
-    // 2. CRIAR (POST)
+    // 2. POST: Create a new constraint set for the tenant, ensuring that the name is unique within the tenant's constraint sets
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateConstraintSetDto dto)
     {
@@ -56,7 +56,7 @@ public class ConstraintSetsController : ControllerBase
         return Ok(new { message = "Pacote de Restrições criado com sucesso!", id = constraintSet.Id });
     }
 
-    // 3. ATUALIZAR (PUT)
+    // 3. PUT: Update an existing constraint set's details (name, species, phase), ensuring that the name remains unique within the tenant's constraint sets
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateConstraintSetDto dto)
     {
@@ -73,7 +73,7 @@ public class ConstraintSetsController : ControllerBase
         return Ok(new { message = "Pacote de Restrições atualizado com sucesso!" });
     }
 
-    // 4. APAGAR (DELETE)
+    // 4. DELETE: Remove a constraint set, ensuring that all associated rules are also deleted (cascade delete)
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {

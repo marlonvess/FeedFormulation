@@ -183,6 +183,11 @@ public class MilkProductionController : ControllerBase
     }
 
     // 7. GET: Evolução Mensal da Vaca (Para o Perfil Individual do Animal) 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="animalId"></param>
+    /// <returns></returns>
     [HttpGet("animal/{animalId}/monthly-evolution")]
     public async Task<IActionResult> GetAnimalMonthlyEvolution(Guid animalId)
     {

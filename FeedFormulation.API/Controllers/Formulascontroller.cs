@@ -14,7 +14,9 @@ namespace FeedFormulation.Api.Controllers;
 public class FormulasController : ControllerBase
 {
     /// <summary>
-    ///
+    /// The database context used for accessing and manipulating formula-related data, including formulas, versions, lines, ingredients, and solver runs. This context is injected 
+    /// via dependency injection and is configured to connect to the appropriate database for the application. It provides methods for 
+    /// querying and saving changes to the database, enabling the controller to perform CRUD operations on formulas and related entities.
     /// </summary>
     private readonly AppDbContext _context;
     private readonly SolverHttpClient _solverClient;
@@ -38,7 +40,7 @@ public class FormulasController : ControllerBase
         return Ok(formulas);
     }
 
-    // GET /api/Formulas/{id}  — retorna a fórmula com todas as versões e linhas
+    // GET /api/Formulas/{id}  — return formula with versions and lines
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -141,7 +143,15 @@ public class FormulasController : ControllerBase
     }
 
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="formulaId"> </param>
+    /// <param name="versionId"> </param>
+    /// <returns> </returns>
+
     // ── SOLVER ───────────────────────────────────────────────
+
 
     // POST /api/Formulas/{formulaId}/versions/{versionId}/solve
     [HttpPost("{formulaId}/versions/{versionId}/solve")]
@@ -160,7 +170,7 @@ public class FormulasController : ControllerBase
             .Where(i => ingredientIds.Contains(i.Id))
             .ToListAsync();
 
-        // Ingredientes para o solver
+        // Solver ingredients
         var solverIngredients = version.Lines.Select(line =>
         {
             var ing = ingredients.First(i => i.Id == line.IngredientId);
@@ -174,7 +184,7 @@ public class FormulasController : ControllerBase
             );
         }).ToList();
 
-        // Perfis nutricionais
+        // Nutritional Profiles
         var nutrientProfiles = ingredients
             .SelectMany(ing => ing.NutritionalInfo.Select(ni => new SolverNutrientProfileInput(
                 IngredientId: ing.Id.ToString(),
@@ -182,7 +192,7 @@ public class FormulasController : ControllerBase
                 Value: ni.Value
             ))).ToList();
 
-        // Restrições do ConstraintSet (se houver)
+        // ConstraintSet restrictions (if it has)
         var constraints = new List<SolverConstraintInput>();
         if (version.ConstraintSetId.HasValue)
         {
@@ -208,7 +218,7 @@ public class FormulasController : ControllerBase
             NutrientProfiles: nutrientProfiles
         );
 
-        // Regista o SolverRun
+        // register SolverRun
         var requestJson = System.Text.Json.JsonSerializer.Serialize(request);
         var solverRun = new FeedFormulation.Domain.Entities.Solver.SolverRun(
             _tenantId, versionId, Guid.Empty, requestJson);
@@ -216,7 +226,7 @@ public class FormulasController : ControllerBase
         _context.SolverRuns.Add(solverRun);
         await _context.SaveChangesAsync();
 
-        // Chama o Python
+        // Call Python
         SolverProblemResponse response;
         try
         {
@@ -229,7 +239,7 @@ public class FormulasController : ControllerBase
             return StatusCode(502, new { message = "Solver inacessível.", error = ex.Message });
         }
 
-        // Guarda o resultado
+        // save the result
         var responseJson = System.Text.Json.JsonSerializer.Serialize(response);
         if (response.Status == "succeeded") solverRun.MarkSucceeded(responseJson);
         else if (response.Status == "infeasible") solverRun.MarkInfeasible(response.DiagnosticMessage ?? "Inviável.");

@@ -18,7 +18,7 @@ public class AnimalsController : ControllerBase
         _context = context;
     }
 
-    // 1. GET: Retorna a lista de todos os animais ativos
+    // 1. GET: Return a list of all active animals in the herd, ordered by SIA Number
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -45,7 +45,7 @@ public class AnimalsController : ControllerBase
         return Ok(result);
     }
 
-    // 2. POST: Regista um novo animal no rebanho
+    // 2. POST: Register a new animal in the herd, ensuring that the SIA Number is unique within the tenant's herd
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateAnimalDto dto)
     {
@@ -68,7 +68,7 @@ public class AnimalsController : ControllerBase
         return Ok(new { message = "Animal successfully registered!", id = animal.Id });
     }
 
-    // 3. PUT: Atualiza o Grupo e o Lote do animal
+    // 3. PUT: Update the management information of an existing animal (Group and Lot)
     [HttpPut("{id}/management")]
     public async Task<IActionResult> UpdateManagement(Guid id, [FromBody] UpdateManagementDto dto)
     {
@@ -81,7 +81,7 @@ public class AnimalsController : ControllerBase
         return Ok(new { message = "Management info successfully updated!" });
     }
 
-    // 4. PUT: Regista a última pesagem de leite
+    // 4. PUT: register the milk production of an animal for the current day, ensuring that the value is non-negative and updating the LastMilkProduction property of the animal
     [HttpPut("{id}/production")]
     public async Task<IActionResult> UpdateProduction(Guid id, [FromBody] decimal milkProduction)
     {
@@ -94,7 +94,7 @@ public class AnimalsController : ControllerBase
         return Ok(new { message = "Production successfully updated!" });
     }
 
-    // 5. DELETE: Animal vendido ou morto (Soft Delete)
+    // 5. DELETE: delete an animal from the herd by changing its status to "Sold" or "Deceased" (the endpoint should accept a query parameter to specify the new status, and only allow changing to "Sold" if the current status is "Active")
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id, [FromQuery] AnimalStatus status)
     {

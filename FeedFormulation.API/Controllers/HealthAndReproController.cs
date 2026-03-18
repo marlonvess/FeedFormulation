@@ -18,11 +18,9 @@ public class HealthAndReproController : ControllerBase
         _context = context;
     }
 
-    // ==========================================
     // --- MÓDULO DE REPRODUÇÃO ---
-    // ==========================================
 
-    // 1. POST: Regista um novo evento reprodutivo
+    // 1. POST: Register a new reproduction event for a cow
     [HttpPost("reproduction")]
     public async Task<IActionResult> CreateReproductionEvent([FromBody] CreateReproductionDto dto)
     {
@@ -39,7 +37,7 @@ public class HealthAndReproController : ControllerBase
         return Ok(new { message = "Reproduction event successfully registered!", id = record.Id });
     }
 
-    // 2. GET: Histórico reprodutivo de uma vaca
+    // 2. GET: Historical of reproduction events for a specific cow, ordered by date (most recent first)
     [HttpGet("animal/{animalId}/reproduction")]
     public async Task<IActionResult> GetAnimalReproductionHistory(Guid animalId)
     {
@@ -60,11 +58,10 @@ public class HealthAndReproController : ControllerBase
         return Ok(records);
     }
 
-    // ==========================================
-    // --- MÓDULO DE SAÚDE ---
-    // ==========================================
+    // --- HEALTH MODULE ---
 
-    // 3. POST: Regista um novo evento de saúde
+
+    // 3. POST: Register a new health event for a cow
     [HttpPost("health")]
     public async Task<IActionResult> CreateHealthEvent([FromBody] CreateHealthDto dto)
     {
@@ -81,7 +78,7 @@ public class HealthAndReproController : ControllerBase
         return Ok(new { message = "Health event successfully registered!", id = record.Id });
     }
 
-    // 4. GET: Histórico de saúde de uma vaca
+    // 4. GET: Historical of health events for a specific cow, ordered by date (most recent first)
     [HttpGet("animal/{animalId}/health")]
     public async Task<IActionResult> GetAnimalHealthHistory(Guid animalId)
     {
@@ -102,23 +99,23 @@ public class HealthAndReproController : ControllerBase
         return Ok(records);
     }
 
-    // ==========================================
-    // --- BUSINESS INTELLIGENCE & ALERTAS ---
-    // ==========================================
 
-    // 5. GET: Alertas de Gestão Avançados (Versão à prova de falhas)
+    // --- BUSINESS INTELLIGENCE & ALERTS ---
+
+
+    // 5. GET: Advanced dashboard endpoint that calculates key metrics and generates alerts based on recent reproduction and health data
     [HttpGet("dashboard-alerts")]
     public async Task<IActionResult> GetDashboardAlerts()
     {
         var today = DateTime.UtcNow.Date;
         var thirtyDaysAgo = today.AddDays(-30);
 
-        // 1. Calcula Despesas Médicas
+        // 1. Calc total health costs in the last 30 days
         var recentHealthCosts = await _context.HealthRecords
             .Where(h => h.TenantId == _tenantId && h.Date >= thirtyDaysAgo && !h.IsDeleted)
             .SumAsync(h => h.Cost ?? 0);
 
-        // 2. Carrega as Vacas e os Registos de forma explícita (Resolve o bug do EF Core)
+        // 2. Load cows and records explicitly (Fixes EF Core bug)
         var femaleCows = await _context.Animals
             .Where(a => a.TenantId == _tenantId && a.Status == AnimalStatus.Active && a.Gender == AnimalGender.Female)
             .ToListAsync();
@@ -133,7 +130,7 @@ public class HealthAndReproController : ControllerBase
 
         foreach (var animal in femaleCows)
         {
-            // Filtra o último evento só para esta vaca específica
+            //  Filters the last event only for this specific cow
             var lastReproEvent = reproRecords
                 .Where(r => r.AnimalId == animal.Id)
                 .OrderByDescending(r => r.Date)
@@ -143,7 +140,7 @@ public class HealthAndReproController : ControllerBase
             {
                 var daysSinceLastEvent = (today - lastReproEvent.Date).TotalDays;
 
-                // Alerta A: Diagnóstico Negativo (Vazia)
+                // Alert A: Negative Pregnancy Checks (Diagnóstico de gestação negativo)
                 if (lastReproEvent.EventType == ReproductionEventType.PregnancyCheck && lastReproEvent.IsPregnant == false)
                 {
                     negativePregnancyChecks.Add(new
@@ -154,7 +151,7 @@ public class HealthAndReproController : ControllerBase
                     });
                 }
 
-                // Alerta B: Vacas para Secar (~220 dias após Inseminação)
+                // Alert B : Cows to dry off (Secagem) - Between 210 and 240 days after Insemination or 180+ days after positive Pregnancy Check
                 if ((lastReproEvent.EventType == ReproductionEventType.Insemination && daysSinceLastEvent >= 210 && daysSinceLastEvent <= 240) ||
                     (lastReproEvent.EventType == ReproductionEventType.PregnancyCheck && lastReproEvent.IsPregnant == true && daysSinceLastEvent >= 180))
                 {
@@ -166,7 +163,7 @@ public class HealthAndReproController : ControllerBase
                     });
                 }
 
-                // Alerta C: Atrasadas para Inseminação (> 60 dias após parto)
+                // Alert  C: Late for insemination (Atraso para inseminação) - More than 60 days since calving without a new insemination
                 if (lastReproEvent.EventType == ReproductionEventType.Calving && daysSinceLastEvent > 60)
                 {
                     overdueForInsemination.Add(new

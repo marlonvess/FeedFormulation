@@ -18,7 +18,7 @@ public class FinanceController : ControllerBase
         _context = context;
     }
 
-    // 1. POST: Regista uma nova transação (Receita ou Despesa)
+    // 1. POST: register a new financial transaction (revenue or expense)
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTransactionDto dto)
     {
@@ -32,7 +32,7 @@ public class FinanceController : ControllerBase
         return Ok(new { message = "Transaction successfully registered!", id = transaction.Id });
     }
 
-    // 2. GET: Histórico de Transações (Extrato estilo Conta Bancária)
+    // 2. GET: Transactions List (For the Transactions Tab in the Dashboard)
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -58,25 +58,25 @@ public class FinanceController : ControllerBase
     // --- BUSINESS INTELLIGENCE (BI) ---
     // ==========================================
 
-    // 3. GET: Resumo Financeiro Mensal (Para o Grande Dashboard!)
+    // 3. GET: Mensal Summary (For the BI Tab in the Dashboard)
     [HttpGet("monthly-summary")]
     public async Task<IActionResult> GetMonthlySummary([FromQuery] int? year, [FromQuery] int? month)
     {
-        // Se não passarmos ano/mês no Swagger, ele assume o mês atual
+        // If year or month are not provided, default to the current month and year
         var targetYear = year ?? DateTime.UtcNow.Year;
         var targetMonth = month ?? DateTime.UtcNow.Month;
 
-        // Puxa as transações do mês escolhido para a memória
+        // Get all transactions for the specified month and year
         var transactions = await _context.FinancialTransactions
             .Where(t => t.TenantId == _tenantId && !t.IsDeleted && t.Date.Year == targetYear && t.Date.Month == targetMonth)
             .ToListAsync();
 
-        // Faz os cálculos da contabilidade
+        // Do some basic calculations for the monthly summary
         var totalRevenue = transactions.Where(t => t.Type == TransactionType.Revenue).Sum(t => t.Amount);
         var totalExpense = transactions.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
         var profit = totalRevenue - totalExpense;
 
-        // Agrupa as despesas por categoria (Perfeito para um Gráfico Circular no React)
+        // Group expenses by category for a more detailed breakdown in the BI dashboard
         var expensesByCategory = transactions
             .Where(t => t.Type == TransactionType.Expense)
             .GroupBy(t => t.Category)
@@ -85,7 +85,7 @@ public class FinanceController : ControllerBase
                 category = g.Key.ToString(),
                 totalAmount = Math.Round(g.Sum(t => t.Amount), 2)
             })
-            .OrderByDescending(c => c.totalAmount) // Ordena da maior despesa para a menor
+            .OrderByDescending(c => c.totalAmount) // sort by highest expense category
             .ToList();
 
         return Ok(new
@@ -93,7 +93,7 @@ public class FinanceController : ControllerBase
             Period = $"{targetYear}-{targetMonth:D2}",
             TotalRevenue = Math.Round(totalRevenue, 2),
             TotalExpense = Math.Round(totalExpense, 2),
-            NetProfit = Math.Round(profit, 2), // Lucro Líquido
+            NetProfit = Math.Round(profit, 2), // Net Profit = Total Revenue - Total Expense
             ExpensesByCategory = expensesByCategory
         });
     }
@@ -102,7 +102,8 @@ public class FinanceController : ControllerBase
     // --- SOFT DELETE ---
     // ==========================================
 
-    // 4. DELETE: Apagar transação incorreta
+    // 4. DELETE: Soft delete a transaction by marking it as deleted instead of removing it from the database.
+    // This allows us to maintain historical data for BI purposes while keeping the active transactions list clean. The transaction will be excluded from all queries that filter out deleted records.
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -125,8 +126,8 @@ public class FinanceController : ControllerBase
 public record CreateTransactionDto(
     DateTime Date,
     decimal Amount,
-    TransactionType Type, // 1 = Receita, 2 = Despesa
-    TransactionCategory Category, // 1 a 7 (Leite, Animais, Ração, Vet, Salários, Equipamentos, Outros)
+    TransactionType Type, // 1 = Profit , 2 = expense
+    TransactionCategory Category, // 1 to 7 Milk, Animals, Ration, Vet, Salary, Equip, Others)
     string Description,
-    Guid? AnimalId // Opcional (Se foi venda de um bezerro específico, por exemplo)
+    Guid? AnimalId // Opcional If the transaction is related to a specific animal, we can link it using the AnimalId. This allows for more detailed tracking and analysis of expenses and revenues associated with individual animals in the herd.
 );
