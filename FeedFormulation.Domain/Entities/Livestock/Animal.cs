@@ -72,5 +72,20 @@ namespace FeedFormulation.Domain.Entities.Livestock
         {
             Status = newStatus;
         }
+
+        public int GetAgeInMonths()
+        {
+            var today = DateTime.UtcNow.Date;
+            var months = ((today.Year - DateOfBirth.Year) * 12) + today.Month - DateOfBirth.Month;
+            if (today.Day < DateOfBirth.Day) months--;
+            return months < 0 ? 0 : months;
+        }
+
+        // Atribui o animal a um lote
+        public void AssignToLot(string lot)
+        {
+            Lot = lot?.Trim();
+        }
+
     }
 }

@@ -1,6 +1,8 @@
 using FeedFormulation.Infrastructure.Persistence;
 using FeedFormulation.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using FeedFormulation.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,26 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+
+// 1. Registar o detetive de pedidos (Contexto Web) e o nosso Serviço
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// 2. Configurar o "Segurança à Porta" (JWT Authentication)
+// Como vai usar uma ferramenta externa (ex: Auth0, Keycloak), o .NET só precisa de saber como ler o bilhete!
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    // AQUI ENTRARÃO AS CREDENCIAIS DO SEU PROVEDOR EXTERNO NO FUTURO
+    options.Authority = "";
+    options.Audience = "";
+});
+
+
 
 // Configuração do Solver Python
 builder.Services.AddHttpClient<FeedFormulation.Infrastructure.Http.SolverHttpClient>();
@@ -94,6 +116,7 @@ app.UseHttpsRedirection();
 ///method, and header, making it suitable for development and testing. In production, consider implementing a more restrictive CORS policy to enhance security by allowing only trusted origins.
 app.UseCors("AllowAll");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
